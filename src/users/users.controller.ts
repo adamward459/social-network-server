@@ -8,16 +8,26 @@ import {
   Delete,
   Version,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { RequestUserRegistrationDto } from './dto/request-user-registration.dto';
+import { JwtService } from '@nestjs/jwt';
+import constants from '../constants';
+import { MailsService } from '../mails/mails.service';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  private logger = new Logger(UsersController.name);
+
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService,
+    private readonly mailsService: MailsService,
+  ) {}
 
   @Post('request-registration')
   @Version('1')
@@ -28,6 +38,20 @@ export class UsersController {
     if (user) {
       throw new BadRequestException('Username is not available');
     }
+
+    const token = this.jwtService.sign(
+      { username: body.username },
+      { secret: constants.REGISTRATION_SECRET },
+    );
+
+    this.mailsService
+      .send({ toAddress: 'adamward459@gmail.com', subject: 'a', text: '11' })
+      .catch((err) => {
+        this.logger.error(err.message);
+      });
+    return {
+      token,
+    };
   }
 
   @Post()

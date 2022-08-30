@@ -1,10 +1,12 @@
-import {
-  CloneReceiptRuleSetCommand,
-  SendEmailCommand,
-  SESClient,
-} from '@aws-sdk/client-ses';
+import { SendEmailCommand, SESClient } from '@aws-sdk/client-ses';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+
+type SendMailPayload = {
+  toAddress: string;
+  subject: string;
+  text: string;
+};
 
 @Injectable()
 export class MailsService {
@@ -20,19 +22,19 @@ export class MailsService {
     });
   }
 
-  send() {
+  send(payload: SendMailPayload) {
     const sendCommand = new SendEmailCommand({
       Destination: {
-        ToAddresses: [],
+        ToAddresses: [payload.toAddress],
       },
       Source: this.configService.get('SES_SENDER_EMAIL'),
       Message: {
         Subject: {
-          Data: '',
+          Data: payload.subject,
         },
         Body: {
           Text: {
-            Data: '',
+            Data: payload.text,
           },
         },
       },
